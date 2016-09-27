@@ -1,4 +1,6 @@
 (function () {
+  'use strict';
+  // Define config
   var gol = {
     canvasSize: 800,
     canvasGrid: 40,
@@ -90,5 +92,6 @@
     cell.draw();
   }
 
+  // Start
   setInterval(animate, gol.period);
 })();
