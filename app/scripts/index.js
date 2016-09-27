@@ -1,97 +1,122 @@
-(function () {
-  'use strict';
-  // Define config
-  var gol = {
-    canvasSize: 800,
-    canvasGrid: 40,
-    period: 100,
-    initProbability: 0.2
-  };
-  gol.cellSize = gol.canvasSize / gol.canvasGrid;
+'use strict';
+/* exported start */
 
-  // Create a canvas
+// Define config
+var gol = {
+  canvasSize: 800,
+  canvasGrid: 40,
+  period: 100,
+  initProbability: 0.1,
+  cellSize: 20
+};
+
+// Cell Object
+var Cell = function (conf) {
+  this.states = [];
+  for (var i = 0; i < conf.canvasGrid; i++) {
+    this.states[i] = [];
+    for (var j = 0; j < conf.canvasGrid; j++) {
+      this.states[i][j] = 0;
+    }
+  }
+};
+
+// Initialize cells
+Cell.prototype.init = function (conf) {
+  for (var i = 0; i < conf.canvasGrid; i++) {
+    for (var j = 0; j < conf.canvasGrid; j++) {
+      if (Math.random() < conf.initProbability) {
+        this.states[i][j] = 1;
+      }
+    }
+  }
+};
+
+// Display cells according to states
+Cell.prototype.draw = function (ctx, conf) {
+  for (var i = 0; i < conf.canvasGrid; i++) {
+    for (var j = 0; j < conf.canvasGrid; j++) {
+      if (this.states[i][j] === 1) {
+        ctx.fillStyle = 'gray';
+        ctx.fillRect(i * conf.cellSize + 1, j * conf.cellSize + 1, conf.cellSize - 2, conf.cellSize - 2);
+      } else {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(i * conf.cellSize + 1, j * conf.cellSize + 1, conf.cellSize - 2, conf.cellSize - 2);
+      }
+    }
+  }
+};
+
+// Create a canvas
+var canvasInit = function (conf) {
   var c = document.createElement('canvas');
   c.id = 'canvas';
-  c.height = gol.canvasSize;
-  c.width = gol.canvasSize;
+  c.height = conf.canvasSize;
+  c.width = conf.canvasSize;
 
   document.body.appendChild(c);
   var ctx = c.getContext('2d');
 
   // Draw a grid
   ctx.strokeStyle = 'gray';
-  for (var i = 0; i < gol.canvasGrid + 1; i++) {
+  for (var i = 0; i < conf.canvasGrid + 1; i++) {
     ctx.beginPath();
-    ctx.moveTo(i * gol.cellSize, 0);
-    ctx.lineTo(i * gol.cellSize, gol.canvasSize);
+    ctx.moveTo(i * conf.cellSize, 0);
+    ctx.lineTo(i * conf.cellSize, conf.canvasSize);
     ctx.stroke();
-    ctx.moveTo(0, i * gol.cellSize);
-    ctx.lineTo(gol.canvasSize, i * gol.cellSize);
+    ctx.moveTo(0, i * conf.cellSize);
+    ctx.lineTo(conf.canvasSize, i * conf.cellSize);
     ctx.stroke();
     ctx.closePath();
   }
+  return ctx;
+};
 
-  // Cell Object
-  var Cell = function () {
-    this.states = [];
-    for (var i = 0; i < gol.canvasGrid; i++) {
-      this.states[i] = [];
-      for (var j = 0; j < gol.canvasGrid; j++) {
-        this.states[i][j] = 0;
+// Calculate alive cell around
+var aliveCellCal = function (pos, i, j, conf) {
+  return pos[(i - 1 + conf.canvasGrid) % conf.canvasGrid][(j - 1 + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i + conf.canvasGrid) % conf.canvasGrid][(j - 1 + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i + 1 + conf.canvasGrid) % conf.canvasGrid][(j - 1 + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i - 1 + conf.canvasGrid) % conf.canvasGrid][(j + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i + 1 + conf.canvasGrid) % conf.canvasGrid][(j + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i - 1 + conf.canvasGrid) % conf.canvasGrid][(j + 1 + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i + conf.canvasGrid) % conf.canvasGrid][(j + 1 + conf.canvasGrid) % conf.canvasGrid] +
+    pos[(i + 1 + conf.canvasGrid) % conf.canvasGrid][(j + 1 + conf.canvasGrid) % conf.canvasGrid];
+};
+
+// Apply Conway's rule
+var animate = function(cell, ctx, conf) {
+  // Backup
+  var backup = [];
+  for (var m = 0; m < conf.canvasGrid; m++) {
+    backup[m] = [];
+    for (var n = 0; n < conf.canvasGrid; n++) {
+      backup[m][n] = cell.states[m][n];
+    }
+  }
+  // Update
+  for (var i = 0; i < conf.canvasGrid; i++) {
+    for (var j = 0; j < conf.canvasGrid; j++) {
+      var surrounds = aliveCellCal(backup, i, j, conf);
+      if (surrounds === 3) {
+        cell.states[i][j] = 1;
+      } else if (surrounds !== 2) {
+        cell.states[i][j] = 0;
       }
     }
-  };
+  }
+  // Draw
+  cell.draw(ctx, conf);
+};
 
-  // Initialize cells
-  Cell.prototype.init = function () {
-    for (var i = 0; i < gol.canvasGrid; i++) {
-      for (var j = 0; j < gol.canvasGrid; j++) {
-        if (Math.random() < gol.initProbability)
-          this.states[i][j] = 1;
-      }
-    }
-  };
-
-  // Display cells according to states
-  Cell.prototype.draw = function () {
-    for (var i = 0; i < gol.canvasGrid; i++) {
-      for (var j = 0; j < gol.canvasGrid; j++) {
-        if (this.states[i][j] === 1) {
-          ctx.fillStyle = 'gray';
-          ctx.fillRect(i * gol.cellSize + 1, j * gol.cellSize + 1, gol.cellSize - 2, gol.cellSize - 2);
-        } else {
-          ctx.fillStyle = 'white';
-          ctx.fillRect(i * gol.cellSize + 1, j * gol.cellSize + 1, gol.cellSize - 2, gol.cellSize - 2);
-        }
-      }
-    }
-  };
+var start = function (conf) {
+  var ctx = canvasInit(conf);
 
   // Create cells
-  var cell = new Cell();
-  cell.init();
-  cell.draw();
-
-  // Apply Conway's rule
-  function animate() {
-    var backup = cell.states;
-    for (var i = 0; i < gol.canvasGrid; i++) {
-      for (var j = 0; j < gol.canvasGrid; j++) {
-        var surrounds =
-          backup[(i - 1 + gol.canvasGrid) % gol.canvasGrid][(j - 1 + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i + gol.canvasGrid) % gol.canvasGrid][(j - 1 + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i + 1 + gol.canvasGrid) % gol.canvasGrid][(j - 1 + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i - 1 + gol.canvasGrid) % gol.canvasGrid][(j + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i + 1 + gol.canvasGrid) % gol.canvasGrid][(j + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i - 1 + gol.canvasGrid) % gol.canvasGrid][(j + 1 + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i + gol.canvasGrid) % gol.canvasGrid][(j + 1 + gol.canvasGrid) % gol.canvasGrid] +
-          backup[(i + 1 + gol.canvasGrid) % gol.canvasGrid][(j + 1 + gol.canvasGrid) % gol.canvasGrid];
-        cell.states[i][j] = (surrounds === 3) | (surrounds === 2 & cell.states[i][j]);
-      }
-    }
-    cell.draw();
-  }
+  var cell = new Cell(conf);
+  cell.init(conf);
+  cell.draw(ctx, conf);
 
   // Start
-  setInterval(animate, gol.period);
-})();
+  setInterval(animate.bind(null, cell, ctx, conf), conf.period);
+};
