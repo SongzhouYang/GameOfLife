@@ -4,11 +4,11 @@
 // Define config
 var gol = {
   canvasSize: 800,
-  canvasGrid: 40,
-  period: 100,
-  initProbability: 0.1,
-  cellSize: 20
+  canvasGrid: 80,
+  period: 50,
+  initProbability: 0.5
 };
+gol.cellSize = gol.canvasSize / gol.canvasGrid;
 
 // Cell Object
 var Cell = function (conf) {
@@ -85,7 +85,7 @@ var aliveCellCal = function (pos, i, j, conf) {
 };
 
 // Apply Conway's rule
-var animate = function(cell, ctx, conf) {
+var animate = function (cell, ctx, conf) {
   // Backup
   var backup = [];
   for (var m = 0; m < conf.canvasGrid; m++) {
@@ -120,3 +120,18 @@ var start = function (conf) {
   // Start
   setInterval(animate.bind(null, cell, ctx, conf), conf.period);
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+  if (document.querySelector('#button')) {
+    document.querySelector('#button').onclick = function () {
+      if (document.querySelector('#canvas')) {
+        document.body.removeChild(document.querySelector('#canvas'));
+      }
+      gol.canvasSize = parseInt(document.querySelector('#canvasSize').value);
+      gol.canvasGrid = parseInt(document.querySelector('#gridNum').value);
+      gol.period = parseInt(document.querySelector('#period').value);
+      gol.cellSize = gol.canvasSize / gol.canvasGrid;
+      start(gol);
+    };
+  }
+});
