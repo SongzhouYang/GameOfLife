@@ -118,20 +118,5 @@ var start = function (conf) {
   cell.draw(ctx, conf);
 
   // Start
-  setInterval(animate.bind(null, cell, ctx, conf), conf.period);
+  return setInterval(animate.bind(null, cell, ctx, conf), conf.period);
 };
-
-document.addEventListener('DOMContentLoaded', function () {
-  if (document.querySelector('#button')) {
-    document.querySelector('#button').onclick = function () {
-      if (document.querySelector('#canvas')) {
-        document.body.removeChild(document.querySelector('#canvas'));
-      }
-      gol.canvasSize = parseInt(document.querySelector('#canvasSize').value);
-      gol.canvasGrid = parseInt(document.querySelector('#gridNum').value);
-      gol.period = parseInt(document.querySelector('#period').value);
-      gol.cellSize = gol.canvasSize / gol.canvasGrid;
-      start(gol);
-    };
-  }
-});

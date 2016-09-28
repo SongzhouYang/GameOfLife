@@ -89,5 +89,9 @@
     it('should have one parameter', function () {
       expect(start).to.have.lengthOf(1);
     });
+    it('should return a number', function () {
+      expect(typeof start(gol)).to.be.deep.equal('number');
+      document.body.removeChild(document.querySelector('#canvas'));
+    })
   });
 })();
